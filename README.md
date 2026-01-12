@@ -1,6 +1,5 @@
 # Velaris Motion: Local Hybrid AI Video Generator
 
-![Velaris Motion Demo](public/assets/demo.png)
 
 **Velaris Motion** represents a new approach to local video generation. Instead of relying on heavy, closed-source APIs, this project implements a custom "Hybrid Architecture" specifically optimized for consumer hardware (like the RTX 4060).
 
