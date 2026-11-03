@@ -379,6 +379,25 @@ class HybridEngine:
                         else:
                             wan_w, wan_h = config.wan_width, config.wan_height
 
+                        # ── Live Step Progress Callback ───────────────────────────────
+                        # Emits SSE progress every N steps so the UI can show a progress bar.
+                        _n_steps_done = [0]
+                        _cb_interval = config.progress_callback_every_n_steps
+
+                        def _wan_step_callback(pipe_obj, step_idx, timestep, callback_kwargs):
+                            _n_steps_done[0] = step_idx + 1
+                            if (step_idx + 1) % _cb_interval == 0 or step_idx == 0:
+                                pct = 0.30 + 0.55 * ((step_idx + 1) / actual_steps)
+                                try:
+                                    job.update_stage(
+                                        GenerationStage.GENERATING_IMAGE,
+                                        round(pct, 3),
+                                        f"Wan2.1: step {step_idx + 1}/{actual_steps} — {int(pct*100)}%"
+                                    )
+                                except Exception:
+                                    pass
+                            return callback_kwargs
+
                         result = pipe(
                             prompt=enhanced_prompt,
                             negative_prompt=neg_prompt,
@@ -388,6 +407,8 @@ class HybridEngine:
                             num_inference_steps=actual_steps,
                             guidance_scale=actual_guidance,
                             generator=generator,
+                            callback_on_step_end=_wan_step_callback,
+                            callback_on_step_end_tensor_inputs=["latents"],
                         )
                         all_frames = result.frames[0]
 
@@ -768,14 +789,38 @@ class HybridEngine:
         neg_prompt = request.negative_prompt if request.negative_prompt else default_neg
         return enhanced_prompt, neg_prompt
 
+    # =========================================================================
+    # Camera Movement Prefix Table
+    # Injected at the start of the prompt so Wan2.1 / CogVideoX T5-XXL
+    # receives a natural-language cinematography direction.
+    # =========================================================================
+    _CAMERA_PREFIXES = {
+        "static":     "",
+        "dolly_in":   "Cinematic smooth dolly-in push tracking shot, subject grows larger, ",
+        "dolly_out":  "Cinematic dramatic dolly-out pull-back reveal shot, subject shrinks as world expands, ",
+        "pan_left":   "Smooth cinematic pan left horizontal sweep, camera pivots left across the scene, ",
+        "pan_right":  "Smooth cinematic pan right horizontal sweep, camera pivots right across the scene, ",
+        "drone_soar": "Epic aerial drone sweeping upward flight shot, bird's-eye perspective rising above, ",
+        "orbit_right":"Cinematic 360-degree orbit arc sweeping right around the subject, ",
+        "tilt_up":    "Cinematic tilt-up vertical reveal shot, camera pivots upward from low to high, ",
+        "tilt_down":  "Cinematic tilt-down vertical shot, camera pivots downward from high to low, ",
+        "handheld":   "Documentary-style handheld camera shot, slight natural organic shake and sway, ",
+    }
+
     def _build_cinematic_prompts(self, request: SafeGenerationRequest):
         """
-        Builds quality-enhanced prompts for CogVideoX 3D DiT photorealism.
+        Builds quality-enhanced prompts for CogVideoX / Wan2.1 3D DiT photorealism.
         T5-XXL understands natural descriptive cinematic language.
+        Injects camera movement prefix when camera_movement != 'static'.
         """
         clean_p = request.prompt.strip()
+
+        # Camera movement injection
+        camera_mv = getattr(request, "camera_movement", "static") or "static"
+        camera_prefix = self._CAMERA_PREFIXES.get(camera_mv, "")
+
         enhanced_prompt = (
-            f"Cinematic film shot, 4k photorealistic, rich detailed textures, natural lighting, "
+            f"{camera_prefix}Cinematic film shot, 4k photorealistic, rich detailed textures, natural lighting, "
             f"masterpiece, sharp focus, natural movement: {clean_p}"
         )
         default_neg = (
@@ -884,6 +929,12 @@ class HybridEngine:
             dir_dtype = self.dtype
             dir_width, dir_height = config.animatediff_width, config.animatediff_height
             dir_num_frames = num_frames_animatediff
+        elif req_engine == "wan" or (req_engine == "auto" and config.active_engine == "wan"):
+            dir_engine = "wan"
+            dir_model_id = config.wan_t2v.id
+            dir_dtype = torch.bfloat16 if self.device == "cuda" else torch.float32
+            dir_width, dir_height = config.wan_width, config.wan_height
+            dir_num_frames = config.wan_num_frames
         else:
             dir_engine = "cogvideox"
             dir_model_id = config.cogvideox.id
@@ -891,7 +942,12 @@ class HybridEngine:
             dir_width, dir_height = config.cogvideox_width, config.cogvideox_height
             dir_num_frames = config.cogvideox_num_frames
 
-        dir_label = "CogVideoX-2B DiT" if dir_engine == "cogvideox" else "AnimateDiff-Lightning"
+        if dir_engine == "wan":
+            dir_label = "Wan2.1 3D DiT (Alibaba)"
+        elif dir_engine == "cogvideox":
+            dir_label = "CogVideoX-2B DiT"
+        else:
+            dir_label = "AnimateDiff-Lightning"
         job.update_stage(GenerationStage.LOADING_MODEL, 0.08, f"Loading {dir_label} for Director...")
         self.vram.prepare_for_model(dir_model_id, auto_unload=True)
         pipe = self.registry.load(
@@ -912,7 +968,20 @@ class HybridEngine:
             with self.vram.managed_inference(dir_model_id):
                 clean_sc = scene.prompt.strip()
 
-                if dir_engine == "cogvideox":
+                if dir_engine == "wan":
+                    enhanced_sc = (
+                        f"Cinematic film shot, 4k photorealistic, rich detailed textures, "
+                        f"natural lighting, masterpiece, sharp focus, natural movement: {clean_sc}"
+                    )
+                    neg_prompt = (
+                        getattr(job.request, "negative_prompt", None)
+                        or "cartoon, anime, illustration, 3d render, plastic, synthetic, "
+                           "deformed, bad anatomy, blurry, grain, watermark, low quality"
+                    )
+                    dir_steps = config.wan_steps
+                    dir_guidance = config.wan_guidance_scale
+                    dir_num_frames = config.wan_num_frames
+                elif dir_engine == "cogvideox":
                     enhanced_sc = (
                         f"Cinematic film shot, 4k photorealistic, rich detailed textures, "
                         f"natural lighting, masterpiece, sharp focus, natural movement: {clean_sc}"
@@ -954,7 +1023,8 @@ class HybridEngine:
             # Export shot to temp
             from diffusers.utils import export_to_video
             shot_path = config.temp_dir / f"{job.job_id}_shot_{shot_i:02d}.mp4"
-            export_to_video(shot_frames, str(shot_path), fps=job.request.fps)
+            dir_fps = config.wan_fps if dir_engine == "wan" else job.request.fps
+            export_to_video(shot_frames, str(shot_path), fps=dir_fps)
             shot_paths.append(shot_path)
             logger.info(f"Director: Shot {shot_i + 1}/{plan.total_shots} done → {shot_path.name}")
 

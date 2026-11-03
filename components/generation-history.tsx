@@ -26,7 +26,8 @@ export interface HistoryItem {
     vramPeakMb?: number;
     fps?: number;
     seed?: number;
-    audioMode?: "none" | "music" | "narration";
+    audioMode?: "none" | "music" | "narration" | "foley";
+    cameraMovement?: string;
     isImg2Vid?: boolean;
     motionBucketId?: number;
     numInferenceSteps?: number;

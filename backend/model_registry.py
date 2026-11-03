@@ -186,6 +186,25 @@ def _load_wan_pipeline(
             logger.info("Wan2.1: Model CPU offload active (full GPU residency per stage)")
         else:
             pipe.to(device)
+
+        # Optional: torch.compile for the DiT transformer (20-35% faster after first warm-up).
+        # Only applied when explicitly enabled in config (config.enable_torch_compile=True).
+        if config.enable_torch_compile and hasattr(pipe, "transformer"):
+            try:
+                import torch._dynamo  # noqa: F401 — ensure dynamo is available
+                pipe.transformer = torch.compile(
+                    pipe.transformer,
+                    mode=config.torch_compile_mode,
+                    backend=config.torch_compile_backend,
+                    fullgraph=False,
+                )
+                logger.info(
+                    f"Wan2.1: torch.compile applied to transformer "
+                    f"(mode={config.torch_compile_mode}, backend={config.torch_compile_backend}). "
+                    f"First inference will be slow (~2-5 min compile); subsequent runs gain 20-35%."
+                )
+            except Exception as e:
+                logger.warning(f"Wan2.1: torch.compile skipped (not critical): {e}")
     else:
         pipe.to("cpu")
 

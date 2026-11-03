@@ -23,6 +23,7 @@ import {
     Smartphone,
     Monitor,
     Square,
+    Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +35,7 @@ export interface GenerationParams {
     guidance_scale: number;
     seed: number | null;
     interpolate: boolean;
-    audio_mode: "none" | "music" | "narration";
+    audio_mode: "none" | "music" | "narration" | "foley";
     negative_prompt?: string;
     num_segments?: number;
     quality: "draft" | "hd" | "fhd" | "4k";
@@ -44,6 +45,7 @@ export interface GenerationParams {
     engine?: "auto" | "wan" | "ltx" | "cloud" | "studio" | "cogvideox" | "animatediff";
     aspect_ratio: "16:9" | "9:16" | "1:1";
     eco_mode: boolean;
+    camera_movement: "static" | "dolly_in" | "dolly_out" | "pan_left" | "pan_right" | "drone_soar" | "orbit_right" | "tilt_up" | "tilt_down" | "handheld";
 }
 
 export const DEFAULT_PARAMS: GenerationParams = {
@@ -64,6 +66,7 @@ export const DEFAULT_PARAMS: GenerationParams = {
     engine: "wan",
     aspect_ratio: "16:9",
     eco_mode: false,
+    camera_movement: "static",
 };
 
 interface AdvancedControlsProps {
@@ -174,6 +177,7 @@ export function AdvancedControls({ params, onChange, disabled }: AdvancedControl
 
     const audioOptions: { value: GenerationParams["audio_mode"]; icon: React.ReactNode; label: string; desc: string }[] = [
         { value: "none", icon: <VolumeX className="w-3.5 h-3.5" />, label: "Silent", desc: "No audio" },
+        { value: "foley", icon: <Sparkles className="w-3.5 h-3.5 text-amber-400" />, label: "Foley / SFX", desc: "Auto scene sound" },
         { value: "music", icon: <Music className="w-3.5 h-3.5" />, label: "Music", desc: "MusicGen ambient" },
         { value: "narration", icon: <Mic className="w-3.5 h-3.5" />, label: "Narration", desc: "Kokoro TTS" },
     ];
@@ -312,6 +316,48 @@ export function AdvancedControls({ params, onChange, disabled }: AdvancedControl
                                         </button>
                                     ))}
                                 </div>
+                            </div>
+
+                            <Divider />
+
+                            {/* ── Camera Movement Section ── */}
+                            <div className="space-y-3">
+                                <SectionLabel icon={<Video className="w-3.5 h-3.5 text-violet-400" />} label="Kamera Hareketi / Camera Movement" />
+                                <div className="grid grid-cols-5 gap-1">
+                                    {([
+                                        { id: "static"      as const, label: "Sabit",      emoji: "📷" },
+                                        { id: "dolly_in"    as const, label: "Dolly İçi",  emoji: "🎯" },
+                                        { id: "dolly_out"   as const, label: "Dolly Dışı", emoji: "↔️" },
+                                        { id: "pan_left"    as const, label: "Sol Pan",    emoji: "⬅️" },
+                                        { id: "pan_right"   as const, label: "Sağ Pan",    emoji: "➡️" },
+                                        { id: "drone_soar"  as const, label: "Drone",      emoji: "🚁" },
+                                        { id: "orbit_right" as const, label: "Orbit",      emoji: "🔄" },
+                                        { id: "tilt_up"     as const, label: "Yukarı",     emoji: "⬆️" },
+                                        { id: "tilt_down"   as const, label: "Aşağı",      emoji: "⬇️" },
+                                        { id: "handheld"    as const, label: "El Kamerası", emoji: "🤳" },
+                                    ] as const).map(({ id, label, emoji }) => (
+                                        <button
+                                            key={id}
+                                            disabled={disabled}
+                                            onClick={() => update({ camera_movement: id })}
+                                            className={cn(
+                                                "py-1.5 px-1 rounded-lg border text-center transition-all flex flex-col items-center justify-center gap-0.5",
+                                                (params.camera_movement || "static") === id
+                                                    ? "bg-gradient-to-b from-violet-500/25 to-purple-500/15 border-violet-500/60 text-violet-200 shadow-[0_0_12px_rgba(139,92,246,0.3)]"
+                                                    : "bg-white/5 border-white/10 text-white/50 hover:border-white/25"
+                                            )}
+                                            id={`camera-${id}`}
+                                        >
+                                            <span className="text-base leading-none">{emoji}</span>
+                                            <span className="text-[9px] font-medium leading-tight">{label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                {(params.camera_movement && params.camera_movement !== "static") && (
+                                    <p className="text-[10px] text-violet-400/70 px-1">
+                                        ✨ Kamera yönü prompt&apos;a otomatik eklenir — Wan2.1 bunu sinematik hareket olarak yorumlar
+                                    </p>
+                                )}
                             </div>
 
                             <Divider />

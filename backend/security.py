@@ -30,9 +30,9 @@ class SafeGenerationRequest(BaseModel):
     dream_steps: int = Field(default=4, description="AnimateDiff-Lightning inference steps")
     guidance_scale: Optional[float] = Field(default=None, ge=1.0, le=20.0, description="CFG scale: None=engine optimal (6.0 for CogVideoX, 1.5 for AnimateDiff)")
     interpolate: bool = Field(default=True, description="Apply FFmpeg frame interpolation to reach 24fps cinema quality")
-    audio_mode: Literal["none", "music", "narration"] = Field(
+    audio_mode: Literal["none", "music", "narration", "foley"] = Field(
         default="none",
-        description="Audio synthesis mode: 'none' (silent), 'music' (MusicGen ambient), 'narration' (TTS)"
+        description="Audio synthesis mode: 'none' (silent), 'music' (MusicGen ambient), 'narration' (TTS), 'foley' (Auto-detected ambient sound effects)"
     )
     negative_prompt: Optional[str] = Field(
         default=None,
@@ -77,6 +77,19 @@ class SafeGenerationRequest(BaseModel):
     eco_mode: bool = Field(
         default=False,
         description="Eco / Silent mode: limits GPU thermal output and memory pressure to keep computer completely responsive"
+    )
+    camera_movement: Literal[
+        "static", "dolly_in", "dolly_out", "pan_left", "pan_right",
+        "drone_soar", "orbit_right", "tilt_up", "tilt_down", "handheld"
+    ] = Field(
+        default="static",
+        description=(
+            "Camera movement style to prefix into the prompt: "
+            "'static' (no movement), 'dolly_in' (push-in tracking shot), "
+            "'dolly_out' (pull-back reveal), 'pan_left'/'pan_right' (horizontal sweep), "
+            "'drone_soar' (aerial upward sweep), 'orbit_right' (360 arc), "
+            "'tilt_up'/'tilt_down' (vertical pivot), 'handheld' (documentary handheld shake)"
+        )
     )
 
     @field_validator("prompt")

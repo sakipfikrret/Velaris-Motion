@@ -83,6 +83,22 @@ class VelarisConfig(BaseModel):
     eco_mode_memory_fraction: float = 0.80       # Caps PyTorch allocation to 80% to keep system snappy
     eco_mode_step_cooldown_seconds: float = 0.05  # Micro-pause between steps to lower thermals & fan noise
 
+    # =========================================================================
+    # torch.compile Acceleration (Wan2.1 / CogVideoX Transformer)
+    # On first run: ~2-5 min compile overhead → subsequent runs are 20-35% faster.
+    # Requires PyTorch >= 2.1 and CUDA. Disabled by default (set True to enable).
+    # =========================================================================
+    enable_torch_compile: bool = False          # Set True to enable persistent compiled transformer
+    torch_compile_mode: str = "reduce-overhead" # "default" | "reduce-overhead" | "max-autotune"
+    torch_compile_backend: str = "inductor"     # "inductor" (default CUDA) | "cudagraphs"
+
+    # =========================================================================
+    # Live Generation Progress — Step Callback Interval
+    # Emits a progress event every N diffusion steps via SSE /jobs/{id}/stream.
+    # Lower = more UI updates (more overhead). 5 = good balance for 30-step runs.
+    # =========================================================================
+    progress_callback_every_n_steps: int = 5    # Emit SSE progress every 5 diffusion steps
+
     # Aspect Ratios: dimensions for generation and upscale
     default_aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
     aspect_ratio_dims: Dict[str, Dict[str, int]] = {

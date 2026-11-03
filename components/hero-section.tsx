@@ -193,6 +193,7 @@ export function HeroSection() {
                 motion_bucket_id: item.motionBucketId ?? p.motion_bucket_id,
                 num_inference_steps: item.numInferenceSteps ?? p.num_inference_steps,
                 audio_mode: item.audioMode ?? p.audio_mode,
+                camera_movement: (item.cameraMovement as any) ?? p.camera_movement,
             }));
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -236,6 +237,7 @@ export function HeroSection() {
                             fps: params.interpolate ? 24 : params.fps,
                             seed: data.metadata?.seed,
                             audioMode: params.audio_mode,
+                            cameraMovement: params.camera_movement,
                             isImg2Vid: currentMode === "image",
                             motionBucketId: params.motion_bucket_id,
                             numInferenceSteps: params.num_inference_steps,
@@ -343,6 +345,7 @@ export function HeroSection() {
                 }
                 formData.append("aspect_ratio", params.aspect_ratio);
                 formData.append("eco_mode", String(params.eco_mode));
+                formData.append("camera_movement", params.camera_movement || "static");
 
                 response = await fetch(`${API_BASE}/animate-image`, {
                     method: "POST",

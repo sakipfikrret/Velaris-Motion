@@ -23,7 +23,7 @@ from typing import Literal, Optional
 
 logger = logging.getLogger("velaris.audio")
 
-AudioMode = Literal["none", "music", "narration"]
+AudioMode = Literal["none", "music", "narration", "foley"]
 
 # ---------------------------------------------------------------------------
 # Dependency availability guards
@@ -301,6 +301,98 @@ def mux_audio_to_video(
 # High-level entry point (called by engine.py)
 # ---------------------------------------------------------------------------
 
+# ─── Foley / Ambient Sound Auto-Synthesis ────────────────────────────────────
+# Maps scene keywords from the prompt to a MusicGen-compatible ambient prompt.
+# This lets Wan2.1-generated videos automatically get matching ambient sound.
+
+_FOLEY_SCENE_MAP: list[tuple[list[str], str]] = [
+    # Water / Rain / Ocean
+    (["rain", "rainy", "storm", "downpour", "drizzle", "flood"],
+     "heavy rain falling on pavement, thunder in the distance, ambient storm sounds"),
+    (["ocean", "sea", "waves", "beach", "shore", "coastal"],
+     "ocean waves crashing on sandy beach, seagulls, light wind, ambient seaside"),
+    (["river", "stream", "brook", "waterfall", "cascade"],
+     "gentle mountain stream flowing over rocks, birdsong, peaceful forest ambience"),
+    (["lake", "pond", "water", "swimming"],
+     "calm lake water lapping, distant ducks, wind through reeds, peaceful nature"),
+    # Fire / Explosion
+    (["fire", "flame", "bonfire", "campfire", "burning"],
+     "crackling campfire flames, wood popping, gentle fire ambience, warm cozy sound"),
+    (["explosion", "blast", "rocket", "fireworks"],
+     "fireworks bursting in night sky, distant crowd cheering, celebratory atmosphere"),
+    # Wind / Nature
+    (["wind", "breeze", "storm", "hurricane", "tornado"],
+     "strong wind howling through trees, rustling leaves, outdoor atmospheric sounds"),
+    (["forest", "jungle", "woods", "tree", "nature"],
+     "birds chirping in forest, rustling leaves, wind through trees, peaceful nature"),
+    (["snow", "winter", "blizzard", "frozen", "ice"],
+     "soft winter wind, snow falling quietly, peaceful cold winter ambience"),
+    (["desert", "sand", "dune", "arid"],
+     "dry desert wind, sand shifting, distant hawk call, vast open silence"),
+    # Urban / City
+    (["city", "street", "urban", "downtown", "traffic"],
+     "busy city street sounds, cars passing, pedestrians, urban ambience"),
+    (["cafe", "coffee", "restaurant", "diner"],
+     "cozy cafe ambience, quiet background chatter, coffee machine, gentle jazz"),
+    (["market", "bazaar", "crowd", "festival"],
+     "busy marketplace crowd noise, vendors, lively festive atmosphere"),
+    # Space / Sci-fi
+    (["space", "galaxy", "cosmos", "nebula", "stars", "planet"],
+     "deep space ambient drone, cosmic hum, ethereal sci-fi atmosphere"),
+    (["futuristic", "cyberpunk", "neon", "cyber", "android"],
+     "cyberpunk city night ambience, electronic hum, neon buzz, rain on metal"),
+    # Animals
+    (["bird", "eagle", "hawk", "owl", "flock"],
+     "birds singing and chirping, gentle breeze, peaceful outdoor morning"),
+    (["horse", "gallop", "equestrian", "cavalry"],
+     "horse hooves galloping, saddle leather creaking, wind rushing past"),
+    (["underwater", "ocean depth", "submarine", "diving", "coral"],
+     "underwater ambient sound, bubbles, deep ocean pressure hum, marine life"),
+]
+
+_FOLEY_DEFAULT_PROMPT = "cinematic ambient atmosphere, subtle environmental sounds, natural film score texture"
+
+
+def _detect_foley_prompt(prompt: str) -> str:
+    """
+    Analyzes the generation prompt and returns an appropriate ambient sound prompt
+    for MusicGen-Small to generate matching foley/atmosphere audio.
+    Returns the default cinematic ambient prompt if no scene keywords match.
+    """
+    prompt_lower = prompt.lower()
+    for keywords, audio_prompt in _FOLEY_SCENE_MAP:
+        if any(kw in prompt_lower for kw in keywords):
+            logger.info(f"Foley: matched scene keywords → '{audio_prompt[:60]}...'")
+            return audio_prompt
+    logger.info(f"Foley: no scene match, using default cinematic ambient")
+    return _FOLEY_DEFAULT_PROMPT
+
+
+def generate_foley(
+    prompt: str,
+    duration_seconds: float,
+    output_path: Path,
+) -> "Optional[Path]":
+    """
+    Auto-detects scene type from the generation prompt and synthesizes
+    matching ambient foley sound using MusicGen-Small (CPU-only, ~300MB model).
+
+    Scene detection covers: rain, ocean, fire, forest, snow, city, space,
+    cyberpunk, underwater and 10+ more scene types.
+
+    Args:
+        prompt: The video generation prompt — used to detect the scene type.
+        duration_seconds: Target audio duration (should match video length).
+        output_path: Where to save the generated WAV file.
+
+    Returns:
+        Path to generated audio file, or None if MusicGen is unavailable.
+    """
+    foley_music_prompt = _detect_foley_prompt(prompt)
+    logger.info(f"Foley synthesis: '{foley_music_prompt[:80]}' ({duration_seconds:.1f}s)")
+    return generate_ambient_music(foley_music_prompt, duration_seconds, output_path)
+
+
 def generate_audio_for_job(
     prompt: str,
     audio_mode: AudioMode,
@@ -329,6 +421,8 @@ def generate_audio_for_job(
 
     if audio_mode == "music":
         return generate_ambient_music(prompt, duration_seconds, audio_path)
+    elif audio_mode == "foley":
+        return generate_foley(prompt, duration_seconds, audio_path)
     elif audio_mode == "narration":
         return generate_narration(prompt, audio_path)
 
