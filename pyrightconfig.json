@@ -1,0 +1,8 @@
+{
+  "extraPaths": [
+    "backend"
+  ],
+  "reportPrivateImportUsage": "none",
+  "reportMissingImports": "none",
+  "reportMissingTypeStubs": "none"
+}

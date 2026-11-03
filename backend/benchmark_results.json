@@ -1,0 +1,114 @@
+{
+  "timestamp": "2026-10-17T20:49:47Z",
+  "velaris_version": "1.1.0",
+  "mock_mode": true,
+  "device": "cuda",
+  "total_prompts": 10,
+  "success_count": 10,
+  "success_rate_percent": 100.0,
+  "oom_count": 0,
+  "oom_rate_percent": 0.0,
+  "other_failures": 0,
+  "latency": {
+    "median_seconds": 0.38,
+    "p95_seconds": 0.46,
+    "min_seconds": 0.37,
+    "max_seconds": 0.49
+  },
+  "peak_vram_mb": 128.0,
+  "resolution": "1024x576",
+  "video_length_frames": 14,
+  "fps": 7,
+  "detailed_results": [
+    {
+      "index": 1,
+      "prompt": "A majestic snow-capped mountain range under a brilliant pink and gold sunset, cinematic lighting, 8k",
+      "seed": 42,
+      "status": "SUCCESS",
+      "duration_seconds": 0.49,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "prompt": "A cyberpunk street in the neon rain, glowing reflections on wet asphalt, flying hovercars, photorealistic",
+      "seed": 43,
+      "status": "SUCCESS",
+      "duration_seconds": 0.43,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 3,
+      "prompt": "Close-up of an astronaut walking on an alien surface with two glowing moons in the dark starry sky",
+      "seed": 44,
+      "status": "SUCCESS",
+      "duration_seconds": 0.37,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 4,
+      "prompt": "A calm tropical beach with crystal clear turquoise water gently lapping onto soft white sand",
+      "seed": 45,
+      "status": "SUCCESS",
+      "duration_seconds": 0.38,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 5,
+      "prompt": "An ancient mystical temple hidden deep inside a lush green emerald rainforest with sun rays",
+      "seed": 46,
+      "status": "SUCCESS",
+      "duration_seconds": 0.37,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 6,
+      "prompt": "A steampunk airship navigating through towering billowing storm clouds at golden hour",
+      "seed": 47,
+      "status": "SUCCESS",
+      "duration_seconds": 0.37,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 7,
+      "prompt": "A vibrant underwater coral reef teeming with exotic glowing bioluminescent sea creatures",
+      "seed": 48,
+      "status": "SUCCESS",
+      "duration_seconds": 0.38,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 8,
+      "prompt": "A dramatic thunderstorm over a dark modern metropolis with lightning striking skyscrapers",
+      "seed": 49,
+      "status": "SUCCESS",
+      "duration_seconds": 0.38,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 9,
+      "prompt": "An enchanted autumn forest with leaves glowing with soft magical amber light as a stream flows",
+      "seed": 50,
+      "status": "SUCCESS",
+      "duration_seconds": 0.38,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 10,
+      "prompt": "A sleek futuristic sports car speeding along a winding coastal highway at dawn",
+      "seed": 51,
+      "status": "SUCCESS",
+      "duration_seconds": 0.38,
+      "is_oom": false,
+      "error": null
+    }
+  ]
+}

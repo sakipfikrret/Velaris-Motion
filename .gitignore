@@ -41,9 +41,17 @@ yarn-error.log*
 backend/venv/
 backend/__pycache__/
 backend/outputs/
+backend/temp/
+backend/weights/
+*.pth
+*.bin
+*.safetensors
 backend/*.mp4
 backend/*.png
+backend/*.jpg
 *.pyc
+.pytest_cache/
+*.tsbuildinfo
 
 # Local Configs
 .env.local

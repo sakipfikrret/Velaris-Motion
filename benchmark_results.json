@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-10-24T20:15:57Z",
+  "velaris_version": "2.0.0",
+  "mock_mode": true,
+  "device": "cuda",
+  "total_prompts": 2,
+  "success_count": 2,
+  "success_rate_percent": 100.0,
+  "oom_count": 0,
+  "oom_rate_percent": 0.0,
+  "other_failures": 0,
+  "latency": {
+    "median_seconds": 0.23,
+    "p95_seconds": 0.24,
+    "min_seconds": 0.21,
+    "max_seconds": 0.24
+  },
+  "peak_vram_mb": 128.0,
+  "resolution": "1024x576",
+  "video_length_frames": 14,
+  "fps": 7,
+  "detailed_results": [
+    {
+      "index": 1,
+      "prompt": "A majestic snow-capped mountain range under a brilliant pink and gold sunset, cinematic lighting, 8k",
+      "seed": 42,
+      "status": "SUCCESS",
+      "duration_seconds": 0.24,
+      "is_oom": false,
+      "error": null
+    },
+    {
+      "index": 2,
+      "prompt": "A cyberpunk street in the neon rain, glowing reflections on wet asphalt, flying hovercars, photorealistic",
+      "seed": 43,
+      "status": "SUCCESS",
+      "duration_seconds": 0.21,
+      "is_oom": false,
+      "error": null
+    }
+  ]
+}

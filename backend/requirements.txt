@@ -1,8 +1,34 @@
-diffusers
-transformers
-accelerate
-fastapi
-uvicorn
-python-multipart
-opencv-python
-imageio[ffmpeg]
+# Velaris Motion Dependencies (v2.0 — AnimateDiff-Lightning Stack)
+# Core ML
+diffusers>=0.31.0
+transformers>=4.44.0
+accelerate>=0.34.0
+safetensors>=0.4.3
+huggingface-hub>=0.24.0
+
+# Speed optimizations
+# PyTorch 2.6+ native SDPA handles memory-efficient attention out of the box
+# xformers is optional: xformers (built with torch 2.6)
+sentencepiece>=0.2.0
+
+# AI Upscaling (Real-ESRGAN)
+basicsr>=1.4.2
+facexlib>=0.3.0
+gfpgan>=1.3.8
+realesrgan>=0.3.0
+
+# API & Server
+fastapi>=0.110.0
+uvicorn>=0.28.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+
+# Video processing
+opencv-python>=4.8.0
+imageio[ffmpeg]>=2.30.0
+pillow>=10.0.0
+numpy>=1.24.0
+
+# Testing
+pytest>=8.0.0
+httpx>=0.27.0

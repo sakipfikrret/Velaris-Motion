@@ -4,7 +4,8 @@ import sys
 print(f"Python Version: {sys.version}")
 print(f"PyTorch Version: {torch.__version__}")
 print(f"CUDA Available: {torch.cuda.is_available()}")
-print(f"CUDA Version (Torch build): {torch.version.cuda}")
+cuda_build = getattr(getattr(torch, "version", None), "cuda", None)
+print(f"CUDA Version (Torch build): {cuda_build}")
 
 if torch.cuda.is_available():
     print(f"Device Name: {torch.cuda.get_device_name(0)}")

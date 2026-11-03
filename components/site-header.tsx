@@ -12,9 +12,9 @@ export function SiteHeader() {
             </Link>
 
             <nav className="flex items-center gap-6 text-sm font-medium text-white/70">
-                <Link href="#" className="hover:text-white transition-colors">Showcase</Link>
-                <Link href="#" className="hover:text-white transition-colors">Pricing</Link>
-                <Link href="#" className="hover:text-white transition-colors">About</Link>
+                <Link href="/" className="hover:text-white transition-colors">Studio</Link>
+                <Link href="/benchmark" className="hover:text-white transition-colors">Benchmark Lab</Link>
+                <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">API Docs</a>
             </nav>
 
             <div className="flex items-center gap-4">
